@@ -89,6 +89,18 @@ jobs:
             echo "✅ env.json already exists"
           fi
 
+      - name: Verify Docker and test files
+        run: |
+          echo "🔍 Checking Docker..."
+          docker --version
+          docker ps
+          echo "✅ Docker is available"
+          echo ""
+          echo "🔍 Checking test files..."
+          ls -la k6/dist/
+          ls -la scripts/
+          echo "✅ Files verified"
+
       - name: Start monitoring stack
         if: inputs.enable_monitoring == true
         working-directory: docker
@@ -108,6 +120,13 @@ jobs:
           TEST_TYPE: ${{ inputs.test_type }}
           TEST_DURATION: ${{ inputs.duration }}
         run: |
+          echo "🚀 Starting performance tests..."
+          echo "Current directory: $(pwd)"
+          echo "Environment: $TEST_ENV"
+          echo "Test type: $TEST_TYPE"
+          echo "Max VUs: $MAX_VUS"
+          echo "Duration: $TEST_DURATION"
+          echo ""
           chmod +x scripts/run_k6_tests.sh
           ./scripts/run_k6_tests.sh
 
