@@ -26,7 +26,7 @@ echo -e "${CYAN}========================================${NC}"
 echo -e "Environment:  ${YELLOW}${TEST_ENV}${NC}"
 echo -e "Max VUs:      ${YELLOW}${MAX_VUS}${NC}"
 echo -e "Test Type:    ${YELLOW}${TEST_TYPE}${NC}"
-echo -e "Duration:     ${YELLOW}${TEST_DURATION}m${NC}"
+echo -e "Duration:     ${YELLOW}${TEST_DURATION}${NC}"
 echo -e "Results:      ${YELLOW}${RESULTS_DIR}${NC}"
 echo -e "${CYAN}========================================${NC}\n"
 
@@ -135,14 +135,32 @@ case "${TEST_TYPE}" in
         ;;
 esac
 
+# Generate summary JSON
+SUMMARY_FILE="results/summary.json"
+mkdir -p results
+cat > "${SUMMARY_FILE}" << EOF
+{
+  "timestamp": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
+  "test_type": "${TEST_TYPE}",
+  "environment": "${TEST_ENV}",
+  "max_vus": ${MAX_VUS},
+  "duration": "${TEST_DURATION}",
+  "status": "success",
+  "results_dir": "${RESULTS_DIR}"
+}
+EOF
+
 # Summary
 echo -e "\n${GREEN}========================================${NC}"
 echo -e "${GREEN}Tests Completed Successfully!${NC}"
 echo -e "${GREEN}========================================${NC}"
-echo -e "Results saved to: ${YELLOW}${RESULTS_DIR}${NC}\n"
+echo -e "Results saved to: ${YELLOW}${RESULTS_DIR}${NC}"
+echo -e "Summary saved to: ${YELLOW}${SUMMARY_FILE}${NC}\n"
 
 # List generated files
-echo -e "Generated files:"
-ls -lh "${RESULTS_DIR}"
+if [ -d "${RESULTS_DIR}" ]; then
+  echo -e "Generated files:"
+  ls -lh "${RESULTS_DIR}" 2>/dev/null || echo "No files in ${RESULTS_DIR}"
+fi
 
 exit 0
