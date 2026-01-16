@@ -78,12 +78,23 @@ jobs:
         working-directory: k6
         run: npm run build
 
+      - name: Create env.json for k6 tests
+        working-directory: k6
+        run: |
+          if [ ! -f env.json ]; then
+            echo "📝 Creating env.json from example..."
+            cp env.example.json env.json
+            echo "✅ env.json created"
+          else
+            echo "✅ env.json already exists"
+          fi
+
       - name: Start monitoring stack
         if: inputs.enable_monitoring == true
         working-directory: docker
         run: |
           echo "🚀 Starting Prometheus and Grafana..."
-          docker-compose up -d
+          docker-compose -f docker-compose.monitoring.yml up -d
           echo "⏳ Waiting for services to be ready..."
           sleep 15
           echo "✅ Monitoring stack is ready"
@@ -139,7 +150,7 @@ jobs:
         working-directory: docker
         run: |
           echo "🛑 Stopping monitoring stack..."
-          docker-compose down -v
+          docker-compose -f docker-compose.monitoring.yml down -v
           echo "✅ Monitoring stack stopped"
 
   notify:
