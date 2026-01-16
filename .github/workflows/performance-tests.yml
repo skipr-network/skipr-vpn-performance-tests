@@ -61,24 +61,20 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          node-version: '20'
           cache: 'npm'
-          cache-dependency-path: k6/package.json
+          cache-dependency-path: performance_tests/k6/package.json
 
       - name: Install dependencies
-        run: |
-          cd k6
-          npm ci
+        working-directory: performance_tests/k6
+        run: npm ci
 
       - name: Build K6 TypeScript tests
-        run: |
-          cd k6
-          npm run build
-
-      - name: Setup k6
-        uses: grafana/setup-k6-action@v1
+        working-directory: performance_tests/k6
+        run: npm run build
 
       - name: Run performance tests
+        working-directory: performance_tests
         env:
           TEST_ENV: ${{ inputs.environment }}
           MAX_VUS: ${{ inputs.max_vus }}
@@ -93,11 +89,12 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: k6-test-results-${{ inputs.test_type }}-${{ github.run_number }}
-          path: results/
+          path: performance_tests/results/
           retention-days: 30
 
       - name: Generate summary
         if: always()
+        working-directory: performance_tests
         run: |
           echo "## 📊 Performance Test Results" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
@@ -114,6 +111,7 @@ jobs:
 
       - name: Check thresholds
         if: inputs.test_type != 'smoke'
+        working-directory: performance_tests
         run: |
           # Check if test passed thresholds
           if grep -q "✗" results/*.txt 2>/dev/null; then
