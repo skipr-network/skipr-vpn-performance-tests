@@ -32,6 +32,7 @@ echo -e "${CYAN}========================================${NC}\n"
 
 # Create results directory
 mkdir -p "${RESULTS_DIR}"
+chmod 777 "${RESULTS_DIR}" 2>/dev/null || true  # Set permissions for Docker
 
 # Function to run k6 test
 run_k6_test() {
@@ -53,7 +54,6 @@ run_k6_test() {
         -e K6_MAX_VUS="${MAX_VUS}" \
         ${K6_IMAGE} run \
         --insecure-skip-tls-verify \
-        --out "json=/results/${test_name}.json" \
         --vus "${vus}" \
         --duration "${duration}" \
         "/k6/dist/${test_file}" || return 1
