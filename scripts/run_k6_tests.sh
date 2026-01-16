@@ -79,19 +79,19 @@ case "${TEST_TYPE}" in
     baseline)
         echo -e "${CYAN}=== BASELINE TEST ===${NC}\n"
         BASELINE_VUS=$(calc_vus 10 ${MAX_VUS})
-        run_k6_test "e2e-simple.test.js" "baseline-test" ${BASELINE_VUS} "${TEST_DURATION}m"
+        run_k6_test "e2e-simple.test.js" "baseline-test" ${BASELINE_VUS} "${TEST_DURATION}"
         ;;
         
     load)
         echo -e "${CYAN}=== LOAD TEST ===${NC}\n"
         LOAD_VUS=$(calc_vus 50 ${MAX_VUS})
-        run_k6_test "e2e-simple.test.js" "load-test" ${LOAD_VUS} "${TEST_DURATION}m"
+        run_k6_test "e2e-simple.test.js" "load-test" ${LOAD_VUS} "${TEST_DURATION}"
         ;;
         
     stress)
         echo -e "${CYAN}=== STRESS TEST ===${NC}\n"
         STRESS_VUS=${MAX_VUS}
-        run_k6_test "e2e-simple.test.js" "stress-test" ${STRESS_VUS} "${TEST_DURATION}m"
+        run_k6_test "e2e-simple.test.js" "stress-test" ${STRESS_VUS} "${TEST_DURATION}"
         ;;
         
     full)
