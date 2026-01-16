@@ -48,6 +48,11 @@ on:
           - '15m'
           - '30m'
         default: '5m'
+      enable_monitoring:
+        description: 'Enable Prometheus/Grafana monitoring stack'
+        required: false
+        type: boolean
+        default: false
 
 jobs:
   performance-test:
@@ -72,6 +77,18 @@ jobs:
       - name: Build K6 TypeScript tests
         working-directory: k6
         run: npm run build
+
+      - name: Start monitoring stack
+        if: inputs.enable_monitoring == true
+        working-directory: docker
+        run: |
+          echo "🚀 Starting Prometheus and Grafana..."
+          docker-compose up -d
+          echo "⏳ Waiting for services to be ready..."
+          sleep 15
+          echo "✅ Monitoring stack is ready"
+          echo "📊 Grafana: http://localhost:3000 (admin/admin)"
+          echo "📈 Prometheus: http://localhost:9090"
 
       - name: Run performance tests
         env:
@@ -101,6 +118,7 @@ jobs:
           echo "- Test Type: \`${{ inputs.test_type }}\`" >> $GITHUB_STEP_SUMMARY
           echo "- Max VUs: \`${{ inputs.max_vus }}\`" >> $GITHUB_STEP_SUMMARY
           echo "- Duration: \`${{ inputs.duration }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "- Monitoring: \`${{ inputs.enable_monitoring && 'Enabled' || 'Disabled' }}\`" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           if [ -f results/summary.json ]; then
             echo "**Results:**" >> $GITHUB_STEP_SUMMARY
@@ -115,6 +133,14 @@ jobs:
             echo "::warning::Some thresholds were not met"
             exit 1
           fi
+
+      - name: Stop monitoring stack
+        if: always() && inputs.enable_monitoring == true
+        working-directory: docker
+        run: |
+          echo "🛑 Stopping monitoring stack..."
+          docker-compose down -v
+          echo "✅ Monitoring stack stopped"
 
   notify:
     name: Notify Results
