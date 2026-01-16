@@ -34,6 +34,14 @@ echo -e "${CYAN}========================================${NC}\n"
 mkdir -p "${RESULTS_DIR}"
 chmod 777 "${RESULTS_DIR}" 2>/dev/null || true  # Set permissions for Docker
 
+# Create main log file
+LOG_FILE="results/test-run-${TIMESTAMP}.log"
+echo "========================================" | tee "${LOG_FILE}"
+echo "K6 Performance Tests - Full Log" | tee -a "${LOG_FILE}"
+echo "Started: $(date)" | tee -a "${LOG_FILE}"
+echo "========================================" | tee -a "${LOG_FILE}"
+echo "" | tee -a "${LOG_FILE}"
+
 # Function to run k6 test
 run_k6_test() {
     local test_file=$1
@@ -42,9 +50,9 @@ run_k6_test() {
     local duration=$4
     local output_file="${RESULTS_DIR}/${test_name}.json"
     
-    echo -e "${YELLOW}Running: ${test_name}${NC}"
-    echo -e "Test file: ${test_file}"
-    echo -e "VUs: ${vus}, Duration: ${duration}\n"
+    echo -e "${YELLOW}Running: ${test_name}${NC}" | tee -a "${LOG_FILE}"
+    echo -e "Test file: ${test_file}" | tee -a "${LOG_FILE}"
+    echo -e "VUs: ${vus}, Duration: ${duration}\n" | tee -a "${LOG_FILE}"
     
     docker run --rm \
         --network host \
@@ -56,9 +64,9 @@ run_k6_test() {
         --insecure-skip-tls-verify \
         --vus "${vus}" \
         --duration "${duration}" \
-        "/k6/dist/${test_file}" || return 1
+        "/k6/dist/${test_file}" 2>&1 | tee -a "${LOG_FILE}" || return 1
     
-    echo -e "${GREEN}✓ ${test_name} completed${NC}\n"
+    echo -e "${GREEN}✓ ${test_name} completed${NC}\n" | tee -a "${LOG_FILE}"
     return 0
 }
 
@@ -146,16 +154,24 @@ cat > "${SUMMARY_FILE}" << EOF
   "max_vus": ${MAX_VUS},
   "duration": "${TEST_DURATION}",
   "status": "success",
-  "results_dir": "${RESULTS_DIR}"
+  "results_dir": "${RESULTS_DIR}",
+  "log_file": "${LOG_FILE}"
 }
 EOF
+
+# Finalize log file
+echo "" | tee -a "${LOG_FILE}"
+echo "========================================" | tee -a "${LOG_FILE}"
+echo "Completed: $(date)" | tee -a "${LOG_FILE}"
+echo "========================================" | tee -a "${LOG_FILE}"
 
 # Summary
 echo -e "\n${GREEN}========================================${NC}"
 echo -e "${GREEN}Tests Completed Successfully!${NC}"
 echo -e "${GREEN}========================================${NC}"
 echo -e "Results saved to: ${YELLOW}${RESULTS_DIR}${NC}"
-echo -e "Summary saved to: ${YELLOW}${SUMMARY_FILE}${NC}\n"
+echo -e "Summary saved to: ${YELLOW}${SUMMARY_FILE}${NC}"
+echo -e "Full log saved to: ${YELLOW}${LOG_FILE}${NC}\n"
 
 # List generated files
 if [ -d "${RESULTS_DIR}" ]; then
